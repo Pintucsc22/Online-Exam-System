@@ -1,0 +1,31 @@
+/* Import TailwindCSS */
+@import "tailwindcss";
+
+/* Define root variables for colors */
+:root {
+  --background: #ffffff; /* Light background color */
+  --foreground: #171717; /* Dark foreground color */
+}
+
+/* Set theme-related custom properties (inline theme) */
+@theme inline {
+  --color-background: var(--background); /* Set background color */
+  --color-foreground: var(--foreground); /* Set foreground color */
+  --font-sans: var(--font-geist-sans); /* Define custom sans-serif font */
+  --font-mono: var(--font-geist-mono); /* Define custom monospace font */
+}
+
+/* Define media query for dark mode (based on system preference) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a; /* Dark background color */
+    --foreground: #ededed; /* Light foreground color */
+  }
+}
+
+/* Apply background and font color to the body */
+body {
+  background: var(--background); /* Background based on theme */
+  color: var(--foreground); /* Text color based on theme */
+  font-family: Arial, Helvetica, sans-serif; /* Default font family */
+}
