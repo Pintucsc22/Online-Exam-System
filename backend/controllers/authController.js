@@ -1,79 +1,22 @@
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
-// Register a new user
-const registerUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+const SECRET_KEY = 'your-secret-key';
 
-  try {
-    // Check if the email already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+const users = [
+  { id: 1, email: 'user@example.com', password: bcrypt.hashSync('password', 10), role: 'user' },
+  { id: 2, email: 'admin@example.com', password: bcrypt.hashSync('admin123', 10), role: 'admin' }
+];
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create a new user
-    const user = new User({ name, email, password: hashedPassword, role });
-    await user.save();
-
-    // Generate a JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role }, // include role in token
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    res.status(201).json({ 
-      token, 
-      userId: user._id, 
-      role: user.role,  // return role here
-      message: 'User registered successfully' 
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Login a user
-const loginUser = async (req, res) => {
+exports.login = async (req, res) => {
   const { email, password } = req.body;
+  const user = users.find(u => u.email === email);
 
-  try {
-    // Find the user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Check if the password is correct
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate a JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, role: user.role },  // include role in token
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    res.status(200).json({ 
-      token, 
-      userId: user._id, 
-      role: user.role,  // return role here
-      message: 'Login successful' 
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(400).json({ message: 'Invalid email or password' });
   }
-};
 
-module.exports = { registerUser, loginUser };
+  const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+  res.json({ token, userId: user.id, role: user.role });
+};
 

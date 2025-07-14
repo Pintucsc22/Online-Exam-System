@@ -42,9 +42,9 @@ export default function UserDashboard() {
       <h1 className="text-3xl font-bold mb-6 text-center">Available Exams</h1>
       {exams.map((exam) => (
         <div
-          key={exam._id}
+          key={exam.id}
           className="p-4 border rounded mb-4 cursor-pointer hover:bg-gray-100 transition"
-          onClick={() => router.push(`/user-dashboard/${exam._id}`)}
+          onClick={() => router.push(`/user-dashboard/${exam.id}`)}
         >
           <h2 className="text-xl font-semibold">{exam.title}</h2>
           <p className="text-gray-700 mb-1">{exam.description || 'No description'}</p>

@@ -1,70 +1,49 @@
-const Exam = require('../models/Exam');
-const Question = require('../models/Question');
+let questions = {}; // examId -> [questions]
 
-// Add question
-const addQuestionToExam = async (req, res) => {
-  try {
-    const { examId } = req.params;
-    const newQuestion = new Question({ ...req.body, exam: examId });
-    await newQuestion.save();
-    res.status(201).json(newQuestion);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to add question', error: err.message });
-  }
+exports.getQuestions = (req, res) => {
+  const { examId } = req.params;
+  res.json(questions[examId] || []);
 };
 
-// Get all questions for an exam
-const getQuestionsByExam = async (req, res) => {
-  try {
-    const { examId } = req.params;
-    const questions = await Question.find({ exam: examId });
-    res.json(questions);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to get questions' });
-  }
+exports.addQuestion = (req, res) => {
+  const { examId } = req.params;
+  const { questionText, options, correctAnswer } = req.body;
+
+  const newQuestion = {
+    id: Date.now().toString(),
+    questionText,
+    options,
+    correctAnswer
+  };
+
+  if (!questions[examId]) questions[examId] = [];
+  questions[examId].push(newQuestion);
+
+  res.status(201).json(newQuestion);
 };
 
-// Get a single question by ID
-const getQuestionById = async (req, res) => {
-  try {
-    const { questionId } = req.params;
-    const question = await Question.findById(questionId);
-    if (!question) return res.status(404).json({ message: 'Question not found' });
-    res.json(question);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to get question' });
+exports.deleteQuestion = (req, res) => {
+  const { examId, questionId } = req.params;
+  if (questions[examId]) {
+    questions[examId] = questions[examId].filter(q => q.id !== questionId);
   }
+  res.json({ message: 'Question deleted successfully' });
 };
 
-// Update a question by ID
-const updateQuestionById = async (req, res) => {
-  try {
-    const { questionId } = req.params;
-    const updatedQuestion = await Question.findByIdAndUpdate(questionId, req.body, { new: true });
-    if (!updatedQuestion) return res.status(404).json({ message: 'Question not found' });
-    res.json(updatedQuestion);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to update question' });
-  }
-};
+exports.submitExam = (req, res) => {
+  const { examId } = req.params;
+  const { answers } = req.body;
 
-// Delete a question by ID
-const deleteQuestionById = async (req, res) => {
-  try {
-    const { questionId } = req.params;
-    const deletedQuestion = await Question.findByIdAndDelete(questionId);
-    if (!deletedQuestion) return res.status(404).json({ message: 'Question not found' });
-    res.json({ message: 'Question deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to delete question' });
-  }
-};
+  const examQuestions = questions[examId] || [];
+  let score = 0;
 
-module.exports = {
-  addQuestionToExam,
-  getQuestionsByExam,
-  getQuestionById,
-  updateQuestionById,
-  deleteQuestionById,
+  answers.forEach(answer => {
+    const question = examQuestions.find(q => q.id === answer.questionId);
+    if (question && question.correctAnswer === answer.selectedOption) {
+      score++;
+    }
+  });
+
+  res.json({ score, total: examQuestions.length });
 };
 

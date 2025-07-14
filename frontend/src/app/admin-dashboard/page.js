@@ -50,7 +50,6 @@ export default function AdminDashboard() {
     setMessage('');
     setError('');
 
-    // Basic validation
     if (!title || !description || !startTime || !duration) {
       setError('All fields are required.');
       return;
@@ -67,7 +66,6 @@ export default function AdminDashboard() {
       });
 
       const data = await res.json();
-      console.log('Create exam response:', data);
 
       if (res.ok) {
         setTitle('');
@@ -152,7 +150,7 @@ export default function AdminDashboard() {
         <p>No exams created yet.</p>
       ) : (
         exams.map((exam) => (
-          <div key={exam._id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
+          <div key={exam.id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
             <h3>{exam.title}</h3>
             <p>{exam.description}</p>
             <p>Start Time: {new Date(exam.startTime).toLocaleString('en-US', {
@@ -164,12 +162,15 @@ export default function AdminDashboard() {
               minute: '2-digit'
             })}</p>
             <p>Duration: {exam.duration} minutes</p>
-            <button onClick={() => handleDeleteExam(exam._id)}>Delete</button>
-            <button onClick={() => router.push(`/admin-dashboard/${exam._id}/questions`)}>Manage Questions</button>
+
+            {/* ✅ Updated: use exam.id instead of exam._id */}
+            <button onClick={() => handleDeleteExam(exam.id)}>Delete</button> 
+
+            {/* ✅ Updated: use exam.id in the route path */}
+            <button onClick={() => router.push(`/admin-dashboard/${exam.id}/questions`)}>Manage Questions</button>
           </div>
         ))
       )}
     </div>
   );
 }
-

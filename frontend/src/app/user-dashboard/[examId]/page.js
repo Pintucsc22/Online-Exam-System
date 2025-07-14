@@ -1,126 +1,130 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
-export default function UserExamPage({ params }) {
-  const examId = params.examId;
+export default function UserExamPage() {
+  const { examId } = useParams();
+  const router = useRouter();
+
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE = 'http://192.168.194.128:5000/api';
-
-  // Fetch questions on mount
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
     async function fetchQuestions() {
-      setError(null);
       try {
-        const res = await fetch(`${API_BASE}/exams/${examId}/questions`, {
+        const res = await fetch(`http://192.168.194.128:5000/api/exams/${examId}/questions`, {
           headers: {
-            Authorization: 'Bearer ' + localStorage.getItem('token'),
-          },
+            Authorization: `Bearer ${token}`
+          }
         });
-        if (!res.ok) {
-          throw new Error(`Failed to fetch questions: ${res.statusText}`);
-        }
+
+        if (!res.ok) throw new Error('Failed to fetch questions');
+
         const data = await res.json();
         setQuestions(data);
       } catch (err) {
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     }
-    fetchQuestions();
-  }, [examId]);
 
-  function handleSelect(questionId, selectedOption) {
-    setAnswers(prev => ({ ...prev, [questionId]: selectedOption }));
-  }
+    if (examId) {
+      fetchQuestions();
+    }
+  }, [examId, router]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    const answersArray = Object.entries(answers).map(([questionId, selectedOption]) => ({
-      questionId,
-      selectedOption,
+  const handleOptionChange = (questionId, selectedOption) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: selectedOption
     }));
+  };
+
+  const handleSubmit = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
 
     try {
-      const res = await fetch(`${API_BASE}/exams/${examId}/submit`, {
+      const payload = {
+        answers: Object.entries(answers).map(([questionId, selectedOption]) => ({
+          questionId,
+          selectedOption
+        }))
+      };
+
+      const res = await fetch(`http://192.168.194.128:5000/api/exams/${examId}/questions/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + localStorage.getItem('token'),
+          Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ answers: answersArray }),
+        body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      if (!res.ok) throw new Error('Failed to submit exam');
 
-      if (res.ok) {
-        setResult(data);
-      } else {
-        setError(data.message || 'Submission failed');
-      }
+      const data = await res.json();
+      setResult(data);
     } catch (err) {
-      setError('Error submitting exam: ' + err.message);
-    } finally {
-      setLoading(false);
+      setError(err.message);
     }
+  };
+
+  if (loading) return <p>Loading questions...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
+  if (result) {
+    return (
+      <div className="p-6">
+        <h2 className="text-2xl font-bold mb-4">Result</h2>
+        <p>Your Score: {result.score} / {result.total}</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ maxWidth: 700, margin: 'auto', padding: '1rem' }}>
-      <h1>Exam Questions</h1>
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Exam Questions</h1>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <form onSubmit={handleSubmit}>
-        {questions.length === 0 && !error && <p>Loading questions...</p>}
-
-        {questions.map((q, i) => (
-          <div
-            key={q._id}
-            style={{ marginBottom: '1.5rem', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}
-          >
-            <p>
-              <strong>Q{i + 1}.</strong> {q.questionText}
-            </p>
-
-            {q.options.map((option, idx) => (
-              <label key={idx} style={{ display: 'block', marginBottom: '0.25rem' }}>
-                <input
-                  type="radio"
-                  name={q._id}
-                  value={option}
-                  checked={answers[q._id] === option}
-                  onChange={() => handleSelect(q._id, option)}
-                  required
-                />
-                {' '}{option}
-              </label>
-            ))}
-          </div>
-        ))}
-
-        <button type="submit" disabled={loading || questions.length === 0}>
-          {loading ? 'Submitting...' : 'Submit Exam'}
-        </button>
-      </form>
-
-      {result && (
-        <div style={{ marginTop: '2rem' }}>
-          <h2>Result</h2>
-          <p>
-            You scored <strong>{result.score}</strong> out of <strong>{result.total}</strong>.
-          </p>
+      {questions.map((q, idx) => (
+        <div key={q.id} className="mb-4">
+          <p className="font-semibold">Q{idx + 1}: {q.questionText}</p>
+          {q.options.map((opt, i) => (
+            <label key={i} className="block">
+              <input
+                type="radio"
+                name={q.id}
+                value={opt}
+                checked={answers[q.id] === opt}
+                onChange={() => handleOptionChange(q.id, opt)}
+                className="mr-2"
+              />
+              {opt}
+            </label>
+          ))}
         </div>
-      )}
+      ))}
+
+      <button
+        onClick={handleSubmit}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
+      >
+        Submit
+      </button>
     </div>
   );
 }
-

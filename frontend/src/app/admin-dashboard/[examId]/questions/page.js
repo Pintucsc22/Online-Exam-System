@@ -12,7 +12,6 @@ export default function QuestionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // For add question form
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState(['', '', '', '']);
   const [correctAnswer, setCorrectAnswer] = useState('');
@@ -51,14 +50,12 @@ export default function QuestionsPage() {
     if (examId) fetchData();
   }, [examId, router]);
 
-  // Handle input change for options
   const handleOptionChange = (index, value) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
   };
 
-  // Submit new question
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -69,7 +66,6 @@ export default function QuestionsPage() {
       return;
     }
 
-    // Basic validation
     if (!questionText.trim()) {
       setError('Question text is required');
       return;
@@ -109,7 +105,6 @@ export default function QuestionsPage() {
       const newQuestion = await res.json();
       setQuestions((prev) => [...prev, newQuestion]);
 
-      // Reset form
       setQuestionText('');
       setOptions(['', '', '', '']);
       setCorrectAnswer('');
@@ -118,7 +113,6 @@ export default function QuestionsPage() {
     }
   };
 
-  // Delete question
   const handleDelete = async (questionId) => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -137,13 +131,13 @@ export default function QuestionsPage() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to delete question');
+        throw new Error('Failed to delete question');
       }
 
-      setQuestions((prev) => prev.filter((q) => q._id !== questionId));
+      setQuestions((prev) => prev.filter((q) => q.id !== questionId));
     } catch (err) {
-      alert(err.message);
+      console.error(err);
+      alert('Error deleting question: ' + err.message);
     }
   };
 
@@ -154,7 +148,6 @@ export default function QuestionsPage() {
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Questions for: {examTitle}</h1>
 
-      {/* Add Question Form */}
       <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded shadow-sm bg-gray-50">
         <h2 className="text-xl font-semibold mb-4">Add Question</h2>
 
@@ -204,13 +197,12 @@ export default function QuestionsPage() {
         </button>
       </form>
 
-      {/* Questions List */}
       {questions.length === 0 ? (
         <p>No questions found.</p>
       ) : (
         <div className="space-y-6">
           {questions.map((q, idx) => (
-            <div key={q._id} className="border p-4 rounded relative">
+            <div key={q.id} className="border p-4 rounded relative">
               <p className="font-medium">
                 Q{idx + 1}. {q.questionText}
               </p>
@@ -223,7 +215,7 @@ export default function QuestionsPage() {
               </ul>
               <button
                 className="text-red-600 mt-2"
-                onClick={() => handleDelete(q._id)}
+                onClick={() => handleDelete(q.id)}
               >
                 Delete
               </button>
@@ -234,4 +226,3 @@ export default function QuestionsPage() {
     </div>
   );
 }
-

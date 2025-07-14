@@ -1,78 +1,185 @@
-'use client';
+// 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useEffect, useState } from 'react';
+// import { useRouter } from 'next/navigation';
 
-export default function Dashboard() {
-  const router = useRouter();
-  const [role, setRole] = useState(null);
+// export default function AdminDashboard() {
+//   const router = useRouter();
+//   const [title, setTitle] = useState('');
+//   const [description, setDescription] = useState('');
+//   const [startTime, setStartTime] = useState('');
+//   const [duration, setDuration] = useState('');
+//   const [exams, setExams] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [message, setMessage] = useState('');
+//   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedRole = localStorage.getItem('role');
+//   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-    if (!token) {
-      router.push('/login');
-    } else {
-      setRole(storedRole);
-    }
-  }, [router]);
+//   useEffect(() => {
+//     if (!token) {
+//       router.push('/');
+//     } else {
+//       fetchExams();
+//     }
+//   }, [token, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('userId');
-    router.push('/login');
-  };
+//   const fetchExams = async () => {
+//     setLoading(true);
+//     try {
+//       const res = await fetch('http://192.168.194.128:5000/api/exams', {
+//         headers: { Authorization: `Bearer ${token}` }
+//       });
+//       const data = await res.json();
+//       if (Array.isArray(data)) {
+//         setExams(data);
+//       } else {
+//         setExams([]);
+//         setError('Unexpected response while fetching exams.');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching exams', err);
+//       setError('Failed to load exams.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
 
-  const goToAdminDashboard = () => {
-    router.push('/admin-dashboard');
-  };
+//   const handleCreateExam = async (e) => {
+//     e.preventDefault();
+//     setMessage('');
+//     setError('');
 
-  const goToUserDashboard = () => {
-    router.push('/user-dashboard');
-  };
+//     if (!title || !description || !startTime || !duration) {
+//       setError('All fields are required.');
+//       return;
+//     }
 
-  return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
-      style={{
-        backgroundImage:
-          "url('https://plus.unsplash.com/premium_photo-1677187301535-b46cec7b2cc8?q=80&w=923&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
-      }}
-    >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-60 z-0"></div>
+//     try {
+//       const res = await fetch('http://192.168.194.128:5000/api/exams', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//           Authorization: `Bearer ${token}`
+//         },
+//         body: JSON.stringify({ title, description, startTime, duration })
+//       });
 
-      {/* Content */}
-      <div className="relative z-10 bg-white/90 p-8 rounded-xl shadow-lg text-center max-w-md w-full">
-        <h1 className="text-3xl font-bold mb-4 text-blue-800">Welcome to Dashboard</h1>
-        <p className="text-gray-700 mb-6">This is a protected route</p>
+//       const data = await res.json();
+//       if (res.ok) {
+//         setTitle('');
+//         setDescription('');
+//         setStartTime('');
+//         setDuration('');
+//         setMessage('Exam created successfully!');
+//         fetchExams();
+//       } else {
+//         setError(data?.error || 'Failed to create exam.');
+//       }
+//     } catch (err) {
+//       console.error('Error creating exam', err);
+//       setError('Something went wrong while creating the exam.');
+//     }
+//   };
 
-        {/* Buttons */}
-        <div className="space-y-4 mb-6">
-          <button
-            onClick={goToAdminDashboard}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition w-full"
-          >
-            Go to Admin Dashboard
-          </button>
-          <button
-            onClick={goToUserDashboard}
-            className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition w-full"
-          >
-            Go to User Dashboard
-          </button>
-        </div>
+//   const handleDeleteExam = async (id) => {
+//     setMessage('');
+//     setError('');
+//     try {
+//       const res = await fetch(`http://192.168.194.128:5000/api/exams/${id}`, {
+//         method: 'DELETE',
+//         headers: {
+//           Authorization: `Bearer ${token}`
+//         }
+//       });
+//       if (res.ok) {
+//         setMessage('Exam deleted successfully.');
+//         fetchExams();
+//       } else {
+//         setError('Failed to delete exam.');
+//       }
+//     } catch (err) {
+//       console.error('Error deleting exam', err);
+//       setError('Something went wrong while deleting the exam.');
+//     }
+//   };
 
-        <button
-          onClick={handleLogout}
-          className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-}
+//   return (
+//     <div className="p-8 max-w-3xl mx-auto">
+//       <h1 className="text-3xl font-bold mb-4">Admin Dashboard</h1>
 
+//       {message && <p className="text-green-600">{message}</p>}
+//       {error && <p className="text-red-600">{error}</p>}
+
+//       <form onSubmit={handleCreateExam} className="space-y-4 mb-8">
+//         <h2 className="text-2xl font-semibold mb-2">Create Exam</h2>
+//         <input
+//           type="text"
+//           placeholder="Exam Title"
+//           value={title}
+//           onChange={(e) => setTitle(e.target.value)}
+//           className="w-full border p-2 rounded"
+//           required
+//         />
+//         <textarea
+//           placeholder="Exam Description"
+//           value={description}
+//           onChange={(e) => setDescription(e.target.value)}
+//           className="w-full border p-2 rounded"
+//           required
+//         />
+//         <input
+//           type="datetime-local"
+//           value={startTime}
+//           onChange={(e) => setStartTime(e.target.value)}
+//           className="w-full border p-2 rounded"
+//           required
+//         />
+//         <input
+//           type="number"
+//           placeholder="Duration (in minutes)"
+//           value={duration}
+//           onChange={(e) => setDuration(e.target.value)}
+//           className="w-full border p-2 rounded"
+//           required
+//         />
+//         <button
+//           type="submit"
+//           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+//         >
+//           Create Exam
+//         </button>
+//       </form>
+
+//       <h2 className="text-xl font-semibold mb-4">Existing Exams</h2>
+//       {loading ? (
+//         <p>Loading exams...</p>
+//       ) : exams.length === 0 ? (
+//         <p>No exams created yet.</p>
+//       ) : (
+//         exams.map((exam) => (
+//           <div key={exam._id} className="border p-4 rounded mb-4">
+//             <h3 className="text-lg font-bold">{exam.title}</h3>
+//             <p>{exam.description}</p>
+//             <p>Start Time: {new Date(exam.startTime).toLocaleString()}</p>
+//             <p>Duration: {exam.duration} minutes</p>
+//             <div className="space-x-2 mt-2">
+//               <button
+//                 onClick={() => handleDeleteExam(exam._id)}
+//                 className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+//               >
+//                 Delete
+//               </button>
+//               <button
+//                 onClick={() => router.push(`/admin-dashboard/${exam._id}/questions`)}
+//                 className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+//               >
+//                 Manage Questions
+//               </button>
+//             </div>
+//           </div>
+//         ))
+//       )}
+//     </div>
+//   );
+// }
