@@ -1,0 +1,19 @@
+[
+  {
+    "name": "Admin One",
+    "email": "admin@example.com",
+    "password": "$2b$10$7bCHKLMDu6lDtgd5NYLxXO0sRPOMGSKXKPIgEO3V0GleVCW17X8EG"
+  },
+  {
+    "name": "Admin2",
+    "email": "admin@mail.com",
+    "password": "$2b$10$NmlhFQSzOKqdStWV6tcDNuH4pxXLCqaSCSK.GJDcR5TdKkY1qZ5W2",
+    "role": "admin"
+  },
+  {
+    "name": "user",
+    "email": "user@mail.com",
+    "password": "$2b$10$6n9Dy9VbOVW6HAwzjdRgbubwbhAxmJz22og9BroETW/7IiFLr3ydO",
+    "role": "user"
+  }
+]

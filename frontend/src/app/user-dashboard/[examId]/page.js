@@ -29,7 +29,6 @@ export default function UserExamPage() {
         });
 
         if (!res.ok) throw new Error('Failed to fetch questions');
-
         const data = await res.json();
         setQuestions(data);
       } catch (err) {
@@ -51,7 +50,9 @@ export default function UserExamPage() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
@@ -84,21 +85,46 @@ export default function UserExamPage() {
     }
   };
 
-  if (loading) return <p>Loading questions...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.push('/');
+  };
 
+  if (loading) return <p className="p-6">Loading questions...</p>;
+  if (error) return <p className="p-6 text-red-500">{error}</p>;
+
+  // ✅ Show result after exam is submitted
   if (result) {
     return (
       <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Result</h2>
-        <p>Your Score: {result.score} / {result.total}</p>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Exam Result</h2>
+          <button
+            onClick={handleLogout}
+            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+        <p className="text-lg">
+          Your Score: <strong>{result.score}</strong> out of <strong>{result.total}</strong>
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Exam Questions</h1>
+    <form onSubmit={handleSubmit} className="p-6 max-w-3xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Exam Questions</h1>
+        <button
+          onClick={handleLogout}
+          type="button"
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Logout
+        </button>
+      </div>
 
       {questions.map((q, idx) => (
         <div key={q.id} className="mb-4">
@@ -120,11 +146,11 @@ export default function UserExamPage() {
       ))}
 
       <button
-        onClick={handleSubmit}
+        type="submit"
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
       >
         Submit
       </button>
-    </div>
+    </form>
   );
 }

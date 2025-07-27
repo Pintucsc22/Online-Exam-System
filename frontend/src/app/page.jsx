@@ -1,141 +1,228 @@
-'use client';
+"use client";
+
 import { useState } from "react";
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
-export default function Homepage() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export default function HomePage() {
   const router = useRouter();
+  const [openChat, setOpenChat] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
+  // Registration form states
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regRole, setRegRole] = useState("");
 
+  // Login form states
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  const handleRegister = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password,
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: regName,
+          email: regEmail,
+          password: regPassword,
+          role: regRole,
+        }),
       });
 
-      // ✅ UPDATED: Destructure token, userId, and role from response
-      const { token, userId, role } = response.data;
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Registration failed");
 
-      // ✅ UPDATED: Store token, userId, and role in localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('role', role);
-
-      alert('Login successful!');
-      setShowLogin(false);
-
-      // ✅ UPDATED: Navigate based on role
-      if (role === 'admin') {
-        router.push('/admin-dashboard');
-      } else if (role === 'user') {
-        router.push('/user-dashboard');
-      } else {
-        setError('Unknown user role. Please contact admin.');
-      }
-
+      alert("✅ Registration successful! Please login.");
+      setOpenChat(false);
+      setShowLogin(true);
     } catch (err) {
-      console.error('Login error:', err.response?.data || err.message);
-      setError('Login failed. Please check your credentials.');
+      alert("❌ " + err.message);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginEmail,
+          password: loginPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Login failed");
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role); // Assuming backend sends "role"
+
+      if (data.role === "admin") {
+        router.push("/admin-dashboard");
+      } else {
+        router.push("/user-dashboard");
+      }
+    } catch (err) {
+      alert("❌ " + err.message);
     }
   };
 
   return (
-    <main className="p-4">
-      <div className="flex justify-between w-full">
-        <div className="flex items-center gap-4">
-          <i className="fa-solid fa-stairs text-xl text-blue-500"></i>
-          <h1 className="text-xl text-blue-700">
-            Never Stop Learning
-          </h1>
-          <p className="ml-9 text-green-700 text-xl font-bold italic">
-            "The beautiful thing about learning is that no one can take it away from you."
-          </p>
+    <main className="min-h-screen p-4 bg-black">
+      <div className="flex items-center w-full p-4">
+        <img
+          src="/image1.jpg"
+          className="rounded-full object-cover w-20 h-20 ml-[10px]"
+          alt="Logo"
+        />
+        <div className="ml-auto space-x-4">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold"
+            onClick={() => {
+              setOpenChat(!openChat);
+              setShowLogin(false);
+            }}
+          >
+            Register Yourself
+          </button>
+
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold"
+            onClick={() => {
+              setShowLogin(!showLogin);
+              setOpenChat(false);
+            }}
+          >
+            Login
+          </button>
         </div>
+      </div>
 
-        <button
-          type="button"
-          onClick={() => setShowLogin(!showLogin)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold"
-        >
-          Login
-        </button>
-
-        {showLogin && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white shadow-md rounded p-6 max-w-sm w-full relative">
-              <button
-                type="button"
-                onClick={() => setShowLogin(false)}
-                className="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+      {/* ✅ Registration Chat Form */}
+      {openChat && (
+        <div className="fixed bottom-4 right-4 w-80 bg-white border border-gray-300 shadow-xl rounded-lg z-50 flex flex-col">
+          <div className="bg-blue-600 text-white px-4 py-2 rounded-t-lg font-bold">
+            Registration Chat
+          </div>
+          <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <label className="text-sm font-medium">👤 What's your name?</label>
+              <input
+                type="text"
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                placeholder="Enter name"
+                className="mt-1 w-full p-2 border rounded"
+              />
+            </div>
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <label className="text-sm font-medium">📧 Your email?</label>
+              <input
+                type="email"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+                placeholder="Enter email"
+                className="mt-1 w-full p-2 border rounded"
+              />
+            </div>
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <label className="text-sm font-medium">🔐 Create a password</label>
+              <input
+                type="password"
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                placeholder="Enter password"
+                className="mt-1 w-full p-2 border rounded"
+              />
+            </div>
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <label className="text-sm font-medium">🧑‍💼 Are you an Admin or User?</label>
+              <select
+                value={regRole}
+                onChange={(e) => setRegRole(e.target.value)}
+                className="mt-1 w-full p-2 border rounded"
               >
-                &times;
-              </button>
-
-              <h2 className="text-xl font-bold mb-4">Login</h2>
-
-              {error && <p className="text-red-500 mb-2">{error}</p>}
-
-              <form onSubmit={handleLogin}>
-                <label className="block mb-2 text-sm font-medium">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-2 mb-4 border rounded"
-                  placeholder="you@example.com"
-                  required
-                />
-
-                <label className="block mb-2 text-sm font-medium">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 mb-4 border rounded"
-                  placeholder="••••••••"
-                  required
-                />
-
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
-                >
-                  Submit
-                </button>
-              </form>
+                <option value="">Select role</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+              </select>
             </div>
           </div>
-        )}
-      </div>
-
-      <div>
-        <img src="/image1.jpg" alt="Image 1" className="h-[600px] w-full" />
-      </div>
-
-      <div className="bg-gradient-to-br from-purple-700 to-purple-900 h-[500px] flex justify-center items-center w-full gap-4">
-        <div className="flex gap-6">
-          <div className="text-center">
-            <img src="/image1.jpg" alt="Image 1" className="h-[300px] w-auto p-6 rounded-4xl" />
-            <p className="text-base font-bold text-green-400">You are topper</p>
-          </div>
-          <div className="text-center">
-            <img src="/image2.jpg" alt="Image 2" className="h-[300px] w-auto p-6 rounded-4xl" />
-            <p className="text-base font-bold text-green-400">Don't watch the clock; do what it does. Keep going</p>
-          </div>
-          <div className="text-center">
-            <img src="/image3.png" alt="Image 3" className="h-[300px] w-auto p-6 rounded-4xl" />
-            <p className="text-base font-bold text-green-400">Believe you can and you're halfway there</p>
+          <div className="p-3 border-t">
+            <button
+              className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={handleRegister}
+            >
+              ✅ Register
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
+      {/* ✅ Login Chat Form */}
+      {showLogin && (
+        <div className="fixed bottom-4 right-4 w-80 bg-white border border-gray-300 shadow-xl rounded-lg z-50 flex flex-col">
+          <div className="bg-blue-600 text-white px-4 py-2 rounded-t-lg font-bold">
+            Login Chat
+          </div>
+          <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <label className="text-sm font-medium">📧 Your email?</label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="Enter email"
+                className="mt-1 w-full p-2 border rounded"
+              />
+            </div>
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <label className="text-sm font-medium">🔐 Password</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter password"
+                className="mt-1 w-full p-2 border rounded"
+              />
+            </div>
+          </div>
+          <div className="p-3 border-t">
+            <button
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              onClick={handleLogin}
+            >
+              🔓 Login
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Page content */}
+      <div className="relative w-full h-screen">
+        <div className="absolute top-0 left-0 w-[35%] h-full">
+          <img
+            src="/profile.png"
+            className="w-full h-full object-cover"
+            alt="Profile"
+          />
+        </div>
+        <div className="relative z-10 w-[40%] h-full left-[30%] flex flex-col justify-center px-10 text-white bg-opacity-50">
+          <h1 className="text-4xl font-bold mb-4">Welcome to My World</h1>
+          <h1 className="text-3xl mb-2">Never Stop Learning!</h1>
+          <p className="text-lg italic">
+            "The beautiful thing about learning is that no one can take it away from you."
+          </p>
+          <p className="text-lg italic">
+            Hi, I'm Pintu Garai. I have a background in Computer Science and a strong
+            interest in DevOps and system administration. I'm familiar with tools like
+            VS Code, VMware, and Linux, and I enjoy learning new technologies and solving
+            technical problems.
+          </p>
+        </div>
+      </div>
       <footer className="bg-gray-800 text-white py-6">
         <div className="max-w-screen-xl mx-auto px-4 flex justify-between items-center">
           <div>

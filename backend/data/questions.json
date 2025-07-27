@@ -1,0 +1,38 @@
+[
+  {
+    "id": "0fe81d0b-c9e4-4ad4-b016-d5a1fab9774a",
+    "examId": "e070a519-4bec-4c25-bcec-935cae4a5e98",
+    "questionText": "What is 2+2?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correctAnswer": "4"
+  },
+  {
+    "id": "db71a605-7574-4c7d-92f5-1706ce2d3496",
+    "examId": "e070a519-4bec-4c25-bcec-935cae4a5e98",
+    "questionText": "What is (A x B)?",
+    "options": [
+      "AB",
+      "ab",
+      "A",
+      "A"
+    ],
+    "correctAnswer": "AB"
+  },
+  {
+    "id": "e6630878-3dd3-4b94-a9e5-43c03fa5cb0e",
+    "examId": "e070a519-4bec-4c25-bcec-935cae4a5e98",
+    "questionText": "What is decimal number?",
+    "options": [
+      "1",
+      "3",
+      "4.4",
+      "1"
+    ],
+    "correctAnswer": "4.4"
+  }
+]
